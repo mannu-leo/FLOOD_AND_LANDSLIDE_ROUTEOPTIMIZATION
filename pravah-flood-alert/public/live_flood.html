@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Live Flood Mapping - Uttarakhand</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #ffe6f0; /* soft pinkish background */
+      padding: 20px;
+      margin: 0;
+    }
+
+    .flood-card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+      max-width: 1000px;
+      margin: auto;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header h2 {
+      font-size: 20px;
+      margin: 0;
+      color: #30d5c8; /* turquoise */
+    }
+
+    .live-badge {
+      background: #ccf5f3;  /* soft turquoise */
+      color: #017a72;      /* darker turquoise */
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .main-content {
+      display: flex;
+      flex-wrap: wrap;
+      margin-top: 20px;
+      gap: 20px;
+    }
+
+    .map-container {
+      flex: 2;
+      min-width: 300px;
+      height: 400px;
+    }
+
+    #map {
+      width: 100%;
+      height: 100%;
+      border-radius: 8px;
+      border: 2px solid #ff7fbf; /* pink border */
+      box-sizing: border-box;
+    }
+
+    .side-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      min-width: 250px;
+    }
+
+    .water-level, .status {
+      background: #e6f7f6; /* very light turquoise */
+      padding: 12px;
+      border-radius: 8px;
+      border: 1.5px solid #ff7fbf; /* pink border */
+    }
+
+    .water-level h4, .status h4 {
+      margin-bottom: 10px;
+      color: #017a72; /* dark turquoise */
+    }
+
+    .water-bar {
+      height: 150px;
+      width: 40px;
+      background: #d0e8e7; /* lighter turquoise */
+      position: relative;
+      border-radius: 5px;
+      margin: 0 auto;
+      overflow: hidden;
+      border: 1.5px solid #ff7fbf; /* pink border */
+    }
+
+    .water-bar .fill {
+      position: absolute;
+      bottom: 0;
+      width: 100%;
+      background: linear-gradient(to top, #30d5c8, #70e6d9); /* turquoise gradient */
+      height: 60%;
+      transition: height 0.5s ease-in-out;
+      border-radius: 0 0 5px 5px;
+    }
+
+    .levels {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-size: 12px;
+      margin-top: 10px;
+      color: #555;
+      gap: 5px;
+    }
+
+    .status-details {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      font-size: 14px;
+      color: #444;
+    }
+
+    .severity {
+      font-weight: bold;
+    }
+
+    .severity.moderate {
+      color: #ff4d94; /* bright pink */
+    }
+
+    .footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 25px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .severity-scale {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: #30d5c8; /* turquoise */
+      font-weight: 600;
+    }
+
+    .scale-bar {
+      background: #d0e8e7; /* light turquoise */
+      width: 200px;
+      height: 10px;
+      border-radius: 5px;
+      overflow: hidden;
+      border: 1px solid #ff7fbf; /* pink border */
+    }
+
+    .scale-bar .fill.low {
+      width: 25%;
+      height: 100%;
+      background: #30d5c8; /* turquoise fill */
+      border-radius: 5px 0 0 5px;
+    }
+
+    .buttons {
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn {
+      padding: 10px 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 14px;
+      transition: background-color 0.3s ease;
+    }
+
+    .btn.share {
+      background: #ffe6f0; /* very light pink */
+      color: #ff4d94; /* pink */
+      border: 2px solid #ff4d94;
+    }
+    .btn.share:hover {
+      background: #ff4d94;
+      color: white;
+    }
+
+    .btn.full-map {
+      background: #30d5c8; /* turquoise */
+      color: white;
+      border: 2px solid #30d5c8;
+    }
+    .btn.full-map:hover {
+      background: #1ea9a1;
+      border-color: #1ea9a1;
+    }
+  </style>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</head>
+<body>
+
+<div class="flood-card">
+  <div class="header">
+    <h2>🔵 Live Flood Mapping - Uttarakhand</h2>
+    <span class="live-badge">📈 Live Data</span>
+  </div>
+
+  <div class="main-content">
+    <div class="map-container">
+      <div id="map"></div>
+    </div>
+
+    <div class="side-panel">
+      <div class="water-level">
+        <h4>Water Level</h4>
+        <div class="water-bar">
+          <div class="fill" style="height: 60%;"></div>
+        </div>
+        <div class="levels">
+          <span>5.0 m</span>
+          <span>4.0 m</span>
+          <span>3.0 m</span>
+          <span>2.0 m</span>
+          <span>1.0 m</span>
+          <span>0 m</span>
+        </div>
+      </div>
+
+      <div class="status">
+        <h4>Status</h4>
+        <div class="status-details">
+          <span class="severity moderate">● Moderate</span>
+          <span>🕒 Updated 2 min ago</span>
+          <span>🌧️ Rainfall: 32 mm/hr</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <div class="severity-scale">
+      <span>Severity</span>
+      <div class="scale-bar">
+        <div class="fill low"></div>
+      </div>
+    </div>
+
+    <div class="buttons">
+      <button class="btn share">🔗 Share</button>
+      <button class="btn full-map">📍 View Full Map</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Initialize Leaflet Map
+  const map = L.map('map').setView([30.0668, 79.0193], 8); // Uttarakhand coordinates
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap contributors'
+  }).addTo(map);
+
+  // Optional: add a marker
+  L.marker([30.0668, 79.0193]).addTo(map)
+    .bindPopup("Uttarakhand Region")
+    .openPopup();
+</script>
+
+</body>
+</html>

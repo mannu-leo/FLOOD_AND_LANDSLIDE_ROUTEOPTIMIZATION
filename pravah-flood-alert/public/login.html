@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Pravah - Sign In / Sign Up</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body, html {
+      height: 100%;
+      font-family: 'Segoe UI', sans-serif;
+      overflow: hidden;
+    }
+
+    body {
+      background: linear-gradient(to bottom, #4A90E2, #1C3F60);
+      position: relative;
+    }
+
+    .rain {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .raindrop {
+      position: absolute;
+      width: 2px;
+      height: 15px;
+      background: rgba(255, 255, 255, 0.3);
+      animation: fall linear infinite;
+    }
+
+    @keyframes fall {
+      to {
+        transform: translateY(100vh);
+      }
+    }
+
+    .cloud {
+      position: absolute;
+      top: 10%;
+      background: rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      filter: blur(10px);
+      animation: drift 60s linear infinite;
+      z-index: 0;
+    }
+
+    @keyframes drift {
+      from { left: -200px; }
+      to { left: 120%; }
+    }
+
+    .cloud:nth-child(1) { width: 150px; height: 80px; top: 15%; animation-delay: 0s; }
+    .cloud:nth-child(2) { width: 200px; height: 100px; top: 20%; animation-delay: 10s; }
+    .cloud:nth-child(3) { width: 100px; height: 60px; top: 25%; animation-delay: 20s; }
+
+    .lightning {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 100%;
+      background: white;
+      opacity: 0;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    @keyframes flash {
+      0%, 100% { opacity: 0; }
+      5% { opacity: 0.5; }
+      6% { opacity: 0; }
+      8% { opacity: 0.8; }
+      10% { opacity: 0; }
+    }
+
+    .title {
+      text-align: center;
+      font-size: 46px;
+      color: #ffffff;
+      font-weight: bold;
+      margin-top: 30px;
+      letter-spacing: 2px;
+      z-index: 2;
+      position: relative;
+      text-shadow: 0 0 20px rgba(255, 255, 255, 0.4);
+      animation: floatLogo 3s ease-in-out infinite;
+    }
+
+    @keyframes floatLogo {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-5px); }
+    }
+
+    .container {
+      position: relative;
+      z-index: 2;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+      width: 400px;
+      margin: 30px auto;
+      padding: 40px;
+      color: white;
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      font-weight: 500;
+    }
+
+    input[type="text"],
+    input[type="email"],
+    input[type="password"] {
+      width: 100%;
+      padding: 12px;
+      margin: 12px 0;
+      border: none;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+    }
+
+    input::placeholder {
+      color: #e0e0e0;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      background: #2980b9;
+      border: none;
+      border-radius: 8px;
+      color: white;
+      font-weight: bold;
+      margin-top: 20px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: transform 0.1s ease, background 0.3s ease;
+    }
+
+    button:hover {
+      background: #1f5f8b;
+    }
+
+    button:active {
+      transform: rotateZ(-3deg) scale(0.98);
+    }
+
+    .toggle-link {
+      text-align: center;
+      margin-top: 18px;
+      font-size: 14px;
+    }
+
+    .toggle-link a {
+      color: #add8e6;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .toggle-link a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Effects -->
+  <div class="rain" id="rain"></div>
+  <div class="lightning" id="lightning"></div>
+  <div class="cloud cloud1"></div>
+  <div class="cloud cloud2"></div>
+  <div class="cloud cloud3"></div>
+
+  <!-- Title -->
+  <div class="title">Pravah</div>
+
+  <!-- Form -->
+  <div class="container" id="formContainer">
+    <h2 id="formTitle">Sign In</h2>
+    <form id="authForm">
+      <div id="nameField" style="display: none;">
+        <input type="text" placeholder="Full Name" id="name" />
+      </div>
+      <input type="email" placeholder="Email" id="email" required />
+      <input type="password" placeholder="Password" id="password" required />
+      <button type="submit" id="submitBtn">Sign In</button>
+    </form>
+    <div class="toggle-link">
+      <span id="toggleText">Don't have an account? <a onclick="toggleForm()">Sign Up</a></span>
+    </div>
+  </div>
+
+  <!-- JavaScript -->
+  <script>
+    let isSignUp = false;
+
+    function toggleForm() {
+      isSignUp = !isSignUp;
+      document.getElementById('formTitle').textContent = isSignUp ? 'Sign Up' : 'Sign In';
+      document.getElementById('submitBtn').textContent = isSignUp ? 'Sign Up' : 'Sign In';
+      document.getElementById('toggleText').innerHTML = isSignUp
+        ? 'Already have an account? <a onclick="toggleForm()">Sign In</a>'
+        : "Don't have an account? <a onclick=\"toggleForm()\">Sign Up</a>";
+
+      document.getElementById('nameField').style.display = isSignUp ? 'block' : 'none';
+    }
+
+    document.getElementById('authForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      alert(isSignUp ? 'Sign Up submitted!' : 'Sign In submitted!');
+    });
+
+    function createRain() {
+      const rainContainer = document.getElementById('rain');
+      const numberOfDrops = 100;
+
+      for (let i = 0; i < numberOfDrops; i++) {
+        const drop = document.createElement('div');
+        drop.classList.add('raindrop');
+        drop.style.left = Math.random() * 100 + 'vw';
+        drop.style.animationDuration = (0.5 + Math.random() * 1.2) + 's';
+        drop.style.animationDelay = Math.random() * 2 + 's';
+        rainContainer.appendChild(drop);
+      }
+    }
+
+    function lightningEffect() {
+      const lightning = document.getElementById('lightning');
+      setInterval(() => {
+        if (Math.random() < 0.2) {
+          lightning.style.animation = 'flash 1s ease';
+          setTimeout(() => lightning.style.animation = '', 1000);
+        }
+      }, 4000);
+    }
+
+    createRain();
+    lightningEffect();
+  </script>
+</body>
+</html>

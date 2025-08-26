@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Pravah - Flood-Safe Route Optimization</title>
+
+  <!-- Font Awesome -->
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+  />
+  <!-- Leaflet CSS -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  />
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    :root {
+      --primary: #1a73e8;
+      --primary-light: #e8f0fe;
+      --secondary: #0d47a1;
+      --safe: #43a047;
+      --moderate: #ff9800;
+      --risky: #e53935;
+      --dark: #202124;
+      --light: #f8f9fa;
+      --gray: #5f6368;
+      --muted-green: #d6e9c6;
+      --soft-olive: #bfcf9e;
+    }
+
+    body {
+      background-color: var(--muted-green);
+      color: var(--dark);
+      line-height: 1.6;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background-color: var(--soft-olive);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    }
+
+    header {
+      background-color: var(--primary);
+      color: white;
+      padding: 30px;
+      text-align: center;
+      position: relative;
+    }
+
+    .back-btn {
+      position: absolute;
+      left: 30px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: white;
+      font-size: 22px;
+      text-decoration: none;
+    }
+
+    h1 {
+      font-size: 2rem;
+    }
+
+    .route-input {
+      padding: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+
+    .input-group {
+      display: flex;
+      align-items: center;
+      background-color: white;
+      border-radius: 8px;
+      padding: 10px 15px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      flex: 1;
+      min-width: 250px;
+    }
+
+    .input-icon {
+      color: var(--primary);
+      margin-right: 10px;
+      font-size: 18px;
+    }
+
+    .input-field {
+      flex: 1;
+      border: none;
+      outline: none;
+      font-size: 16px;
+      padding: 8px 0;
+      background: transparent;
+    }
+
+    .swap-btn {
+      background-color: var(--primary-light);
+      border: none;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      color: var(--primary);
+      font-size: 18px;
+      cursor: pointer;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .location-btn {
+      background-color: var(--safe);
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      margin-left: 10px;
+    }
+
+    .route-overview {
+      padding: 30px;
+    }
+
+    .section-title {
+      font-size: 1.2rem;
+      color: var(--gray);
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+    }
+
+    .section-title i {
+      margin-right: 10px;
+    }
+
+    .route-details {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    .detail-item {
+      text-align: center;
+      flex: 1;
+    }
+
+    .detail-value {
+      font-size: 1.8rem;
+      font-weight: 600;
+      color: var(--primary);
+    }
+
+    .detail-label {
+      font-size: 0.9rem;
+      color: var(--gray);
+    }
+
+    .safety-score {
+      background-color: #e8f5e9;
+      border-radius: 8px;
+      padding: 15px;
+      display: flex;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .safety-score i {
+      color: var(--safe);
+      font-size: 24px;
+      margin-right: 15px;
+    }
+
+    .segments {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .segment {
+      flex: 1;
+      text-align: center;
+      padding: 12px;
+      border-radius: 6px;
+      font-weight: 500;
+      min-width: 120px;
+    }
+
+    .segment-safe {
+      background-color: #e8f5e9;
+      color: var(--safe);
+    }
+
+    .segment-moderate {
+      background-color: #fff8e1;
+      color: var(--moderate);
+    }
+
+    .segment-risky {
+      background-color: #ffebee;
+      color: var(--risky);
+    }
+
+    .navigate-btn {
+      display: block;
+      width: 100%;
+      padding: 18px;
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1.2rem;
+      font-weight: 600;
+      margin: 30px 0 0;
+      cursor: pointer;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+      transition: background-color 0.3s ease;
+    }
+
+    .navigate-btn:hover {
+      background-color: var(--secondary);
+    }
+
+    #map {
+      height: 400px;
+      margin: 30px;
+      border-radius: 10px;
+    }
+
+    .route-alerts,
+    .alternate-routes {
+      padding: 30px;
+    }
+
+    .alert-item {
+      display: flex;
+      align-items: center;
+      padding: 20px 0;
+      border-bottom: 1px solid #eaeaea;
+    }
+
+    .alert-icon {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 20px;
+      font-size: 20px;
+    }
+
+    .weather-icon {
+      background-color: #e3f2fd;
+      color: var(--primary);
+    }
+
+    .moderate-icon {
+      background-color: #fff8e1;
+      color: var(--moderate);
+    }
+
+    .high-icon {
+      background-color: #ffebee;
+      color: var(--risky);
+    }
+
+    .alert-content {
+      flex: 1;
+    }
+
+    .alert-title {
+      font-weight: 600;
+      margin-bottom: 5px;
+    }
+
+    .alert-desc {
+      font-size: 0.95rem;
+      color: var(--gray);
+    }
+
+    .route-option {
+      display: flex;
+      justify-content: space-between;
+      padding: 15px 20px;
+      background-color: var(--light);
+      border-radius: 8px;
+      margin-bottom: 15px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+
+    .route-option:hover {
+      background-color: #dbe9ff;
+    }
+
+    footer {
+      background-color: var(--light);
+      padding: 20px;
+      text-align: center;
+      color: var(--gray);
+      font-size: 0.95rem;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 20px;
+      color: var(--gray);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <a href="#" class="back-btn" title="Go Back"
+        ><i class="fas fa-arrow-left"></i
+      ></a>
+      <h1>Pravah - Uttarakhand Route</h1>
+    </header>
+
+    <div class="route-input">
+      <div class="input-group">
+        <i class="fas fa-circle input-icon" style="color: var(--safe);"></i>
+        <input
+          type="text"
+          class="input-field"
+          id="from-location"
+          value="Almora"
+          placeholder="Current Location"
+        />
+        <button class="location-btn" onclick="getCurrentLocation()">
+          <i class="fas fa-location-arrow"></i> Get Location
+        </button>
+      </div>
+      <button class="swap-btn" title="Swap Locations" onclick="swapLocations()">
+        <i class="fas fa-exchange-alt"></i>
+      </button>
+      <div class="input-group">
+        <i
+          class="fas fa-location-arrow input-icon"
+          style="color: var(--risky);"
+        ></i>
+        <input
+          type="text"
+          class="input-field"
+          id="to-location"
+          value="Bhimtal"
+          placeholder="Destination"
+        />
+      </div>
+    </div>
+
+    <div class="route-overview">
+      <div class="section-title">
+        <i class="fas fa-route"></i> Route Overview • Almora to Bhimtal
+      </div>
+
+      <div class="route-details">
+        <div class="detail-item">
+          <div class="detail-value" id="estimated-time">--</div>
+          <div class="detail-label">Estimated Time</div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-value" id="distance">--</div>
+          <div class="detail-label">Distance</div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-value" id="segments-count">--</div>
+          <div class="detail-label">Segments</div>
+        </div>
+      </div>
+
+      <div class="safety-score">
+        <i class="fas fa-shield-alt"></i>
+        <div>Safety Score: <strong id="safety-score">--</strong></div>
+      </div>
+
+      <div class="segments" id="segments-container">
+        <div class="loading">Loading route segments...</div>
+      </div>
+
+      <button class="navigate-btn" onclick="startNavigation()">Navigate</button>
+    </div>
+
+    <div id="map"></div>
+
+    <div class="route-alerts">
+      <div class="section-title">
+        <i class="fas fa-exclamation-triangle"></i> Route Alerts
+      </div>
+      <div id="alerts-container">
+        <div class="loading">Loading alerts...</div>
+      </div>
+    </div>
+
+    <div class="alternate-routes">
+      <div class="section-title">
+        <i class="fas fa-road"></i> Alternate Routes
+      </div>
+      <div id="alternate-routes-container">
+        <div class="loading">Loading alternate routes...</div>
+      </div>
+    </div>
+
+    <footer>
+      &copy; 2025 Pravah. Flood-Safe Route Optimization for Safer Journeys in Uttarakhand.
+    </footer>
+  </div>
+
+  <!-- Leaflet JS -->
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    crossorigin=""
+  ></script>
+  <script>
+    // Initialize map centered on Uttarakhand
+    const map = L.map('map').setView([29.5912, 79.6483], 10);
+
+    L.tileLayer(
+      'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+      {
+        maxZoom: 19,
+        attribution:
+          '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      }
+    ).addTo(map);
+
+    // Markers for Almora and Bhimtal
+    const almoraMarker = L.marker([29.5912, 79.6483]).addTo(map).bindPopup('Almora');
+    const bhimtalMarker = L.marker([29.3444, 79.5633]).addTo(map).bindPopup('Bhimtal');
+
+    // API Base URL
+    const API_BASE = 'http://localhost:3000/api';
+
+    // Global variables
+    let currentRoute = null;
+    let userLocation = null;
+
+    // Initialize the application
+    async function initializeApp() {
+      await loadRouteOptimization();
+      await loadAlerts();
+      await loadAlternateRoutes();
+      loadMapData();
+    }
+
+    // Load route optimization
+    async function loadRouteOptimization() {
+      try {
+        const response = await fetch(`${API_BASE}/optimize-route`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            from: 'Almora',
+            to: 'Bhimtal',
+            userLocation: userLocation
+          })
+        });
+
+        const data = await response.json();
+        currentRoute = data;
+        updateRouteDisplay(data);
+      } catch (error) {
+        console.error('Error loading route:', error);
+        document.getElementById('segments-container').innerHTML = 
+          '<div class="alert-item"><div class="alert-icon high-icon"><i class="fas fa-exclamation-triangle"></i></div><div class="alert-content"><div class="alert-title">Error Loading Route</div><div class="alert-desc">Unable to load route optimization data</div></div></div>';
+      }
+    }
+
+    // Update route display
+    function updateRouteDisplay(routeData) {
+      const summary = routeData.summary;
+      
+      document.getElementById('estimated-time').textContent = `${summary.estimatedTime} min`;
+      document.getElementById('distance').textContent = `${summary.totalDistance} km`;
+      document.getElementById('segments-count').textContent = routeData.route.length;
+      document.getElementById('safety-score').textContent = `${summary.safetyScore}%`;
+
+      // Update segments
+      const segmentsContainer = document.getElementById('segments-container');
+      segmentsContainer.innerHTML = '';
+      
+      routeData.route.forEach((segment, index) => {
+        const segmentDiv = document.createElement('div');
+        segmentDiv.className = `segment segment-${segment.risk}`;
+        segmentDiv.innerHTML = `Segment ${index + 1}: ${segment.risk.charAt(0).toUpperCase() + segment.risk.slice(1)}`;
+        segmentsContainer.appendChild(segmentDiv);
+      });
+    }
+
+    // Load alerts
+    async function loadAlerts() {
+      try {
+        const response = await fetch(`${API_BASE}/alerts`);
+        const alerts = await response.json();
+        
+        const alertsContainer = document.getElementById('alerts-container');
+        alertsContainer.innerHTML = '';
+        
+        alerts.forEach(alert => {
+          const alertDiv = document.createElement('div');
+          alertDiv.className = 'alert-item';
+          
+          let iconClass = 'weather-icon';
+          if (alert.severity === 'high') iconClass = 'high-icon';
+          else if (alert.severity === 'moderate') iconClass = 'moderate-icon';
+          
+          alertDiv.innerHTML = `
+            <div class="alert-icon ${iconClass}">
+              <i class="fas fa-${alert.type === 'weather' ? 'cloud-showers-heavy' : 'exclamation-triangle'}"></i>
+            </div>
+            <div class="alert-content">
+              <div class="alert-title">${alert.title}</div>
+              <div class="alert-desc">${alert.description}</div>
+            </div>
+          `;
+          
+          alertsContainer.appendChild(alertDiv);
+        });
+      } catch (error) {
+        console.error('Error loading alerts:', error);
+      }
+    }
+
+    // Load alternate routes
+    async function loadAlternateRoutes() {
+      try {
+        const response = await fetch(`${API_BASE}/optimize-route`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            from: 'Almora',
+            to: 'Bhimtal',
+            userLocation: userLocation
+          })
+        });
+
+        const data = await response.json();
+        
+        const routesContainer = document.getElementById('alternate-routes-container');
+        routesContainer.innerHTML = '';
+        
+        data.alternatives.forEach(route => {
+          const routeDiv = document.createElement('div');
+          routeDiv.className = 'route-option';
+          routeDiv.innerHTML = `
+            <span>${route.name}</span>
+            <span>${route.time} min • ${route.distance} km • Safety ${route.safetyScore}%</span>
+          `;
+          routesContainer.appendChild(routeDiv);
+        });
+      } catch (error) {
+        console.error('Error loading alternate routes:', error);
+      }
+    }
+
+    // Load map data
+    async function loadMapData() {
+      try {
+        // Load flood-prone areas
+        const floodResponse = await fetch(`${API_BASE}/flood-areas`);
+        const floodAreas = await floodResponse.json();
+        
+        // Load landslide areas
+        const landslideResponse = await fetch(`${API_BASE}/landslide-areas`);
+        const landslideAreas = await landslideResponse.json();
+        
+        // Add flood areas to map
+        floodAreas.forEach(area => {
+          const color = area.risk === 'high' ? '#e53935' : area.risk === 'moderate' ? '#ff9800' : '#43a047';
+          const circle = L.circle(area.coordinates, {
+            color: color,
+            fillColor: color,
+            fillOpacity: 0.3,
+            radius: 2000
+          }).addTo(map);
+          circle.bindPopup(`<b>${area.name}</b><br>Risk: ${area.risk}<br>${area.description}`);
+        });
+        
+        // Add landslide areas to map
+        landslideAreas.forEach(area => {
+          const color = area.risk === 'high' ? '#e53935' : area.risk === 'moderate' ? '#ff9800' : '#43a047';
+          const circle = L.circle(area.coordinates, {
+            color: color,
+            fillColor: color,
+            fillOpacity: 0.3,
+            radius: 1500
+          }).addTo(map);
+          circle.bindPopup(`<b>${area.name}</b><br>Risk: ${area.risk}<br>${area.description}`);
+        });
+        
+        // Draw route line
+        if (currentRoute) {
+          const routeCoords = currentRoute.route.map(segment => segment.start);
+          routeCoords.push(currentRoute.route[currentRoute.route.length - 1].end);
+          
+          const routeLine = L.polyline(routeCoords, {
+            color: '#1a73e8',
+            weight: 4,
+            opacity: 0.8
+          }).addTo(map);
+        }
+        
+      } catch (error) {
+        console.error('Error loading map data:', error);
+      }
+    }
+
+    // Get current location
+    function getCurrentLocation() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            userLocation = {
+              latitude: position.coords.latitude,
+              longitude: position.coords.longitude
+            };
+            
+            // Update user location on map
+            if (userLocation) {
+              L.marker([userLocation.latitude, userLocation.longitude])
+                .addTo(map)
+                .bindPopup('Your Location')
+                .openPopup();
+            }
+            
+            // Reload route with user location
+            loadRouteOptimization();
+            
+            // Update backend with user location
+            updateUserLocation(userLocation);
+          },
+          (error) => {
+            alert('Unable to get your location: ' + error.message);
+          }
+        );
+      } else {
+        alert('Geolocation is not supported by this browser.');
+      }
+    }
+
+    // Update user location on backend
+    async function updateUserLocation(location) {
+      try {
+        await fetch(`${API_BASE}/update-location`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            userId: 'user123',
+            latitude: location.latitude,
+            longitude: location.longitude,
+            timestamp: new Date().toISOString()
+          })
+        });
+      } catch (error) {
+        console.error('Error updating location:', error);
+      }
+    }
+
+    // Swap locations
+    function swapLocations() {
+      const fromInput = document.getElementById('from-location');
+      const toInput = document.getElementById('to-location');
+      const temp = fromInput.value;
+      fromInput.value = toInput.value;
+      toInput.value = temp;
+      
+      // Reload route
+      loadRouteOptimization();
+    }
+
+    // Start navigation
+    function startNavigation() {
+      if (currentRoute) {
+        alert(`Starting navigation from ${document.getElementById('from-location').value} to ${document.getElementById('to-location').value}\n\nRoute: ${currentRoute.route.length} segments\nEstimated Time: ${currentRoute.summary.estimatedTime} minutes\nSafety Score: ${currentRoute.summary.safetyScore}%`);
+      } else {
+        alert('Please wait for route to load before starting navigation.');
+      }
+    }
+
+    // Initialize app when page loads
+    document.addEventListener('DOMContentLoaded', initializeApp);
+  </script>
+</body>
+</html>

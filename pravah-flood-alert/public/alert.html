@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Instant Alerts</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <style>
+    body {
+      background: #ffd6cc; /* Pinkish peach for full page background */
+      font-family: "Segoe UI", sans-serif;
+      margin: 0;
+      padding: 40px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .alert-box {
+      background: #fff0e5; /* softer peach for alert box */
+      border-radius: 20px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.05);
+      width: 700px;
+      overflow: hidden;
+      border: 2px solid #ffb399; /* slightly stronger peach border */
+    }
+
+    .alert-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: linear-gradient(to right, #ffccbb, #fff0e5);
+      padding: 16px 20px;
+      border-bottom: 1px solid #f2f2f2;
+    }
+
+    .badge {
+      background: #ff924f;
+      color: #fff;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .alert-main {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .alert-info {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .alert-icon {
+      font-size: 26px;
+      color: orange;
+      background: #fff3e0;
+      padding: 10px;
+      border-radius: 50%;
+    }
+
+    .alert-text h4 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: bold;
+    }
+
+    .alert-text small {
+      color: gray;
+      display: block;
+      margin-top: 3px;
+    }
+
+    .alert-buttons {
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn {
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+    }
+
+    .btn.view {
+      background: #ff6b6b;
+      color: #fff;
+    }
+
+    .btn.dismiss {
+      background: #e0f7f1;
+      color: #007b5e;
+    }
+
+    .alert-history-header {
+      padding: 10px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .collapse-btn {
+      background: #def4ec;
+      color: #007b5e;
+      padding: 6px 14px;
+      border-radius: 12px;
+      font-size: 13px;
+      border: none;
+      cursor: pointer;
+    }
+
+    .alert-history {
+      padding: 0 20px 20px;
+    }
+
+    .history-item {
+      border-left: 3px solid #ddd;
+      padding-left: 15px;
+      margin-left: 12px;
+      margin-top: 15px;
+      position: relative;
+    }
+
+    .history-item::before {
+      content: "";
+      width: 12px;
+      height: 12px;
+      background: #ff924f;
+      border-radius: 50%;
+      position: absolute;
+      left: -9px;
+      top: 5px;
+    }
+
+    .history-item:nth-child(2)::before {
+      background: #009dff;
+    }
+
+    .history-item:nth-child(3)::before {
+      background: #2ecc71;
+    }
+
+    .history-item p {
+      margin: 0;
+      font-weight: 500;
+    }
+
+    .history-meta {
+      font-size: 13px;
+      color: gray;
+      margin-top: 3px;
+    }
+
+    .tag {
+      padding: 4px 10px;
+      font-size: 12px;
+      border-radius: 8px;
+      margin-left: 10px;
+      font-weight: bold;
+    }
+
+    .tag.warning {
+      background: #ff924f;
+      color: white;
+    }
+
+    .tag.watch {
+      background: #e1f7f5;
+      color: #007a5a;
+    }
+
+    .tag.clear {
+      background: #d9fdd9;
+      color: #218838;
+    }
+
+    .footer-note {
+      background: #fff0e5;
+      padding: 12px 20px;
+      color: #cc3300;
+      font-size: 14px;
+      font-weight: 500;
+      border-top: 1px solid #f2c0aa;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="alert-box">
+    <!-- Header -->
+    <div class="alert-header">
+      <span class="badge"><i class="fas fa-bell"></i> Instant Alerts</span>
+      <span class="badge" style="background:#ff7800;"><i class="fas fa-exclamation-triangle"></i> Active Warning</span>
+    </div>
+
+    <!-- Main Alert -->
+    <div class="alert-main">
+      <div class="alert-info">
+        <div class="alert-icon">
+          <i class="fas fa-bell"></i>
+        </div>
+        <div class="alert-text">
+          <h4>Flood Warning in Zone 4!</h4>
+          <small>2 mins ago • ID: FW-2048</small>
+        </div>
+      </div>
+      <div class="alert-buttons">
+        <button class="btn view">📄 View Details</button>
+        <button class="btn dismiss">Dismiss</button>
+      </div>
+    </div>
+
+    <!-- Alert History Header -->
+    <div class="alert-history-header">
+      <h4>Alert History</h4>
+      <button class="collapse-btn" onclick="toggleHistory(this)">▼ Collapse</button>
+    </div>
+
+    <!-- Alert History Items -->
+    <div class="alert-history" id="alertHistory">
+      <div class="history-item">
+        <p>Zone 4 upgraded to Warning <span class="tag warning">Warning</span></p>
+        <div class="history-meta">Today • 14:22 • Rainfall 38 mm/hr</div>
+      </div>
+      <div class="history-item">
+        <p>Zone 4 moved to Watch <span class="tag watch">Watch</span></p>
+        <div class="history-meta">Today • 13:40 • River level 3.2 m</div>
+      </div>
+      <div class="history-item">
+        <p>All clear for Zone 2 <span class="tag clear">Clear</span></p>
+        <div class="history-meta">Yesterday • 19:05</div>
+      </div>
+    </div>
+
+    <!-- Footer Message -->
+    <div class="footer-note">
+      ⚠️ Stay prepared. Severe weather may impact low-lying areas in the next 2 hours.
+    </div>
+  </div>
+
+  <script>
+    function toggleHistory(btn) {
+      const history = document.getElementById("alertHistory");
+      if (history.style.display === "none") {
+        history.style.display = "block";
+        btn.innerText = "▼ Collapse";
+      } else {
+        history.style.display = "none";
+        btn.innerText = "▲ Expand";
+      }
+    }
+  </script>
+</body>
+</html>
